@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<Camera>
+	<Name>Unnamed camera</Name>
+	<Info>Intrinsic calibration exported from metaioSDK</Info>
+	<CalibrationResolution>
+		<X>320</X>
+		<Y>240</Y>
+	</CalibrationResolution>
+	<FocalLength>
+		<X>275.3951416015625</X>
+		<Y>276.414154052734375</Y>
+	</FocalLength>
+	<PrincipalPoint>
+		<X>166.3719482421875</X>
+		<Y>118.530731201171875</Y>
+	</PrincipalPoint>
+	<Distortion>
+		<K1>0</K1>
+		<K2>0</K2>
+		<P1>0</P1>
+		<P2>0</P2>
+	</Distortion>
+</Camera>

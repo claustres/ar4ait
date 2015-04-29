@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">AR4AIT</string>
+    <string name="btnAid">Aid</string>
+    <string name="btnModel">Model</string>
+    <string name="btnTool">Tool</string>
+    <string name="btnFeatures">Features</string>
+    <string name="btnReset">Reset</string>
+    <string name="btnClose">close</string>
+    <string name="btnPrevious">previous</string>
+    <string name="btnNext">next</string>
+</resources>
