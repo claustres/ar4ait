@@ -23,6 +23,16 @@
         android:layout_centerVertical="true"
         >
         <ImageButton
+            android:id="@+id/resetPoseButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:background="@android:color/transparent"
+            android:contentDescription="@+strings/btnResetPose"
+            android:onClick="onResetPoseButtonClick"
+            android:src="@drawable/refresh" />
+        <ImageButton
             android:id="@+id/resetButton"
             android:layout_width="64dp"
             android:layout_height="64dp"

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.MotionEvent;
 import android.widget.ImageButton;
 
 import com.metaio.sdk.ARViewActivity;
@@ -66,6 +67,10 @@ public class ARActivity extends ARViewActivity
      */
     private Boolean mDebugFeatures = false;
 
+    /**
+     * Activity buttons
+     */
+    ImageButton mResetPoseButton = null;
     ImageButton mResetButton = null;
     ImageButton mModelButton = null;
     ImageButton mToolButton = null;
@@ -73,7 +78,17 @@ public class ARActivity extends ARViewActivity
     ImageButton mPreviousButton = null;
     ImageButton mNextButton = null;
 
-	/**
+    /**
+     * Activity touch events
+     */
+    float mXDown;
+    float mYDown;
+    float mXMove;
+    float mYMove;
+    float mXUp;
+    float mYUp;
+
+    /**
 	 * Metaio SDK callback handler
 	 */
 	private MetaioSDKCallbackHandler mCallbackHandler;	
@@ -103,6 +118,48 @@ public class ARActivity extends ARViewActivity
 		mCallbackHandler.delete();
 		mCallbackHandler = null;
 	}
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event)
+    {
+        // This manages geometry picking
+        super.onTouch(v, event);
+
+        // Nothing to do while tracking
+        if ( mIsTracking ) return true;
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                mXDown = event.getX();
+                mYDown = event.getY();
+                mXMove = mYMove = -1;
+                break;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                final float ROTATION_SENSITIVITY = 10;
+                // Compute motion delta (initialize on first move position with down position)
+                float dX = ( event.getX() - (mXMove >= 0 ? mXMove : mXDown) ) / ROTATION_SENSITIVITY;
+                float dY = -( event.getY() - (mYMove >= 0 ? mYMove : mYDown) ) / ROTATION_SENSITIVITY;
+                // Update initial camera : rotate around Z on x slide, Y on Y slide
+                metaioSDK.sensorCommand("rotateInitialPoseWorldDeg", Float.toString(dX) + " " + Float.toString(dY) + " 0");
+                //metaioSDK.sensorCommand("rotateInitialPoseWorldDeg", "0 " + Float.toString(dY) + " " + Float.toString(dX));
+                // Update last moved position
+                mXMove = event.getX();
+                mYMove = event.getY();
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                mXUp = event.getX();
+                mYUp = event.getY();
+                break;
+            }
+            case MotionEvent.ACTION_CANCEL: {
+                break;
+            }
+        }
+
+        return true;
+    }
 
 	@Override
 	protected IMetaioSDKCallback getMetaioSDKCallbackHandler()
@@ -150,6 +207,11 @@ public class ARActivity extends ARViewActivity
 		metaioSDK.sensorCommand("reset");
 	}
 
+    public void onResetPoseButtonClick(View v)
+    {
+        metaioSDK.sensorCommand("resetInitialPose");
+    }
+
     public void onPreviousButtonClick(View v)
     {
         // Start animation
@@ -185,7 +247,7 @@ public class ARActivity extends ARViewActivity
         });
 
         // if we detect any target, we bind the loaded augmented content to this target
-        // actually this is done automatically by assiging the model to the right COS at creation
+        // actually this is done automatically by assigning the model to the right COS at creation
         /*
         if ( (mAugmentedModel != null) && enabled )
         {
@@ -349,12 +411,12 @@ public class ARActivity extends ARViewActivity
     {
         IGeometry parent = geometry.getParentGeometry();
 
-        while ( ( parent != null ) && ( parent != model ) )
+        while ( ( parent != null ) && !parent.equals(model) )
         {
             parent = parent.getParentGeometry();
         }
 
-        return parent == model;
+        return parent.equals(model);
     }
     /* Toggle animation on/off on a given 3D model
 	 */
@@ -407,7 +469,7 @@ public class ARActivity extends ARViewActivity
         MetaioDebug.log("Touched Geometry: "+geometry.getName());
 
         // Start Info Activity
-        if ( isChild(mAugmentedToolModel, geometry) )
+        if ( mAugmentedToolModel.equals(geometry) || isChild(mAugmentedToolModel, geometry) )
         {
             Intent intent = new Intent(getApplicationContext(), InformationActivity.class);
             startActivity(intent);
