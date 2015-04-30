@@ -28,6 +28,7 @@ public class InformationActivity extends Activity
 		super.onCreate(savedInstanceState);
 
         setContentView(R.layout.webview);
+        mProgress = findViewById(R.id.progress);
         mWebView = (WebView) findViewById(R.id.webview);
 
         mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);

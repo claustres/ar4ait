@@ -63,7 +63,7 @@
             android:layout_marginTop="10dp"
             android:contentDescription="@+strings/btnTool"
             android:onClick="onToolButtonClick"
-            android:src="@drawable/gear" />
+            android:src="@drawable/wrench" />
         <ImageButton
             android:id="@+id/aidButton"
             android:layout_width="64dp"

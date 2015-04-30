@@ -23,9 +23,9 @@ import com.metaio.tools.io.AssetsManager;
 public class ARActivity extends ARViewActivity
 {
 	/**
-	 * 3D model
+	 * Tracking state visualization model
 	 */
-	private IGeometry mModel = null;
+	private IGeometry mTrackingModel = null;
 
     /**
      * 3D augmented content model
@@ -60,12 +60,8 @@ public class ARActivity extends ARViewActivity
     /**
      * Debug flag to enabled model rendering
      */
-    private Boolean mDebugModel = false;
-
-    /**
-     * Debug flag to enabled features rendering
-     */
-    private Boolean mDebugFeatures = false;
+    private String[] mDebugModes = {"off", "model", "normals", "normals_and_matches", "points"};
+    private int mCurrentDebugMode = 0;
 
     /**
      * Activity buttons
@@ -98,7 +94,8 @@ public class ARActivity extends ARViewActivity
 	{
 		super.onCreate(savedInstanceState);
 
-           // Get buttons
+        // Get buttons
+        mResetPoseButton = (ImageButton)mGUIView.findViewById(R.id.resetPoseButton);
         mResetButton = (ImageButton)mGUIView.findViewById(R.id.resetButton);
         mModelButton = (ImageButton)mGUIView.findViewById(R.id.modelButton);
         mAidButton = (ImageButton)mGUIView.findViewById(R.id.aidButton);
@@ -139,10 +136,8 @@ public class ARActivity extends ARViewActivity
                 final float ROTATION_SENSITIVITY = 10;
                 // Compute motion delta (initialize on first move position with down position)
                 float dX = ( event.getX() - (mXMove >= 0 ? mXMove : mXDown) ) / ROTATION_SENSITIVITY;
-                float dY = -( event.getY() - (mYMove >= 0 ? mYMove : mYDown) ) / ROTATION_SENSITIVITY;
-                // Update initial camera : rotate around Z on x slide, Y on Y slide
-                metaioSDK.sensorCommand("rotateInitialPoseWorldDeg", Float.toString(dX) + " " + Float.toString(dY) + " 0");
-                //metaioSDK.sensorCommand("rotateInitialPoseWorldDeg", "0 " + Float.toString(dY) + " " + Float.toString(dX));
+                float dY = ( event.getY() - (mYMove >= 0 ? mYMove : mYDown) ) / ROTATION_SENSITIVITY;
+                metaioSDK.sensorCommand("rotatePose", Float.toString(dX) + " " + Float.toString(dY) + " 0");
                 // Update last moved position
                 mXMove = event.getX();
                 mYMove = event.getY();
@@ -181,43 +176,64 @@ public class ARActivity extends ARViewActivity
         }
     }
 
-	public void onCloseButtonClick(View v)
+    /* Close the app
+     */
+    public void onCloseButtonClick(View v)
 	{
 		finish();
 	}
 
-    public void onAidButtonClick(View v)
+    /* Reset to non-tracking state
+	 */
+    public void onResetButtonClick(View v)
     {
-        mAidModel.setVisible( !mAidModel.isVisible() );
+        metaioSDK.sensorCommand("reset");
     }
 
-    public void onModelButtonClick(View v)
-    {
-        mDebugModel = !mDebugModel;
-        metaioSDK.sensorCommand("setDebugRenderMode", mDebugModel ? "model" : "off");
-    }
-
-    public void onToolButtonClick(View v)
-    {
-        mAugmentedToolModel.setVisible( !mAugmentedToolModel.isVisible() );
-    }
-
-	public void onResetButtonClick(View v)
-	{
-		metaioSDK.sensorCommand("reset");
-	}
-
+    /* Reset pose to default state
+	 */
     public void onResetPoseButtonClick(View v)
     {
         metaioSDK.sensorCommand("resetInitialPose");
     }
 
+    /* Display the default pose or not
+	 */
+    public void onAidButtonClick(View v)
+    {
+        if ( mAidModel != null ) {
+            mAidModel.setVisible( !mAidModel.isVisible() );
+        }
+    }
+
+    /* Display the line model as currently tracked or not
+	 */
+    public void onModelButtonClick(View v)
+    {
+        // Switch between debug modes
+        mCurrentDebugMode = (mCurrentDebugMode + 1) % mDebugModes.length;
+        metaioSDK.sensorCommand("setDebugRenderMode", mDebugModes[mCurrentDebugMode]);
+    }
+
+    /* Display the tools associated with the model when in tracking state
+	 */
+    public void onToolButtonClick(View v)
+    {
+        if ( mAugmentedToolModel != null ) {
+            mAugmentedToolModel.setVisible( !mAugmentedToolModel.isVisible() );
+        }
+    }
+
+    /* Go back to previous state of the procedure when in tracking state
+	 */
     public void onPreviousButtonClick(View v)
     {
         // Start animation
         //setAnimationEnabled(mAugmentedModel, true);
     }
 
+    /* Switch to next state of the procedure when in tracking state
+	 */
     public void onNextButtonClick(View v)
     {
         // Stop animation
@@ -237,6 +253,7 @@ public class ARActivity extends ARViewActivity
             @Override
             public void run()
             {
+                mResetPoseButton.setVisibility(mIsTracking ? View.GONE : View.VISIBLE);
                 mResetButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
                 mModelButton.setVisibility(View.VISIBLE);
                 mToolButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
@@ -299,8 +316,8 @@ public class ARActivity extends ARViewActivity
 	@Override
 	protected void loadContents() 
 	{
-		//mModel = loadModel("cup.obj");
         // If you want to occlude the augmented content
+        /*
         mOcclusionModel = loadModel("cup_tracking/SurfaceModel.obj");
         mAidModel = loadModel("cup_tracking/VIS_INIT.obj");
         mAugmentedModel = loadModel("Screw.zip");
@@ -311,12 +328,23 @@ public class ARActivity extends ARViewActivity
         mAugmentedToolModel.setScale(new Vector3d(0.3f, 0.3f, 0.3f));
         mAugmentedToolModel.setTranslation(new Vector3d(-10.7f, 57.4f, 66f));
         mAugmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
+        */
+        mOcclusionModel = loadModel("mouse_tracking/SurfaceModel.obj");
+        mAidModel = loadModel("mouse_tracking/VIS_INIT.obj");
+        mTrackingModel = loadModel("mouse_tracking/VIS_TRACK.obj");
+        mAugmentedModel = loadModel("Screw.zip");
+        mAugmentedModel.setScale(new Vector3d(0.1f, 0.1f, 0.1f));
+        mAugmentedModel.setTranslation(new Vector3d(-0f, -33f, 17.5f));
+        mAugmentedToolModel = loadModel("Screwdriver.zip");
+        mAugmentedToolModel.setScale(new Vector3d(0.2f, 0.2f, 0.2f));
+        mAugmentedToolModel.setTranslation(new Vector3d(-0f, -33f, 50f));
+        mAugmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
 
 		//final File envmapPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "env_map.png");
 		//metaioSDK.loadEnvironmentMap(envmapPath, EENV_MAP_FORMAT.EEMF_LATLONG);
 
-		if (mModel != null)
-			mModel.setCoordinateSystemID(1);
+		if (mTrackingModel != null)
+            mTrackingModel.setCoordinateSystemID(1);
         if (mAugmentedModel != null)
             mAugmentedModel.setCoordinateSystemID(1);
         if (mAugmentedToolModel != null)
@@ -337,7 +365,8 @@ public class ARActivity extends ARViewActivity
         final File cameraPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "camera.xml");
         metaioSDK.setCameraParameters(cameraPath);
         // Then tracking settings
-		setTrackingConfiguration("cup_tracking/Tracking.xml");
+		//setTrackingConfiguration("cup_tracking/Tracking.xml");
+        setTrackingConfiguration("mouse_tracking/Tracking.xml");
 	}
 
     /* Manage Metaio SDK callbacks
@@ -416,7 +445,7 @@ public class ARActivity extends ARViewActivity
             parent = parent.getParentGeometry();
         }
 
-        return parent.equals(model);
+        return ( parent != null ) && parent.equals(model);
     }
     /* Toggle animation on/off on a given 3D model
 	 */
