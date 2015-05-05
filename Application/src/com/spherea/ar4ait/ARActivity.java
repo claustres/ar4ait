@@ -1,6 +1,8 @@
 package com.spherea.ar4ait;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,6 +22,8 @@ import com.metaio.sdk.jni.TrackingValuesVector;
 import com.metaio.sdk.jni.Vector3d;
 import com.metaio.tools.io.AssetsManager;
 
+import com.spherea.ar4ait.ProcedureStep;
+
 public class ARActivity extends ARViewActivity
 {
 	/**
@@ -28,24 +32,19 @@ public class ARActivity extends ARViewActivity
 	private IGeometry mTrackingModel = null;
 
     /**
-     * 3D augmented content model
-     */
-    private IGeometry mAugmentedModel = null;
-
-    /**
-     * 3D augmented tool model
-     */
-    private IGeometry mAugmentedToolModel = null;
-
-    /**
      * Check for close distance
      */
     private boolean mIsCloseToModel = false;
 
     /**
-     * Check for tracking
+     * Check for tracking state
      */
     private boolean mIsTracking = false;
+
+    /**
+     * Check for tracking paused or running
+     */
+    private boolean mIsTrackingPaused = true;
 
     /**
      * 3D model to occlude augmented content
@@ -64,11 +63,19 @@ public class ARActivity extends ARViewActivity
     private int mCurrentDebugMode = 0;
 
     /**
+     * The different procedure steps
+     */
+    private List<ProcedureStep> mProcedureSteps = new ArrayList<ProcedureStep>();
+    private int mCurrentStep = 0;
+
+    /**
      * Activity buttons
      */
+    ImageButton mTrackingButton = null;
+    ImageButton mFreezeButton = null;
     ImageButton mResetPoseButton = null;
     ImageButton mResetButton = null;
-    ImageButton mModelButton = null;
+    ImageButton mDebugButton = null;
     ImageButton mToolButton = null;
     ImageButton mAidButton = null;
     ImageButton mPreviousButton = null;
@@ -95,17 +102,20 @@ public class ARActivity extends ARViewActivity
 		super.onCreate(savedInstanceState);
 
         // Get buttons
+        mTrackingButton = (ImageButton)mGUIView.findViewById(R.id.trackingButton);
+        mFreezeButton = (ImageButton)mGUIView.findViewById(R.id.freezeButton);
         mResetPoseButton = (ImageButton)mGUIView.findViewById(R.id.resetPoseButton);
         mResetButton = (ImageButton)mGUIView.findViewById(R.id.resetButton);
-        mModelButton = (ImageButton)mGUIView.findViewById(R.id.modelButton);
+        mDebugButton = (ImageButton)mGUIView.findViewById(R.id.debugButton);
         mAidButton = (ImageButton)mGUIView.findViewById(R.id.aidButton);
         mToolButton = (ImageButton)mGUIView.findViewById(R.id.toolButton);
         mPreviousButton = (ImageButton)mGUIView.findViewById(R.id.previousButton);
         mNextButton = (ImageButton)mGUIView.findViewById(R.id.nextButton);
 
-        // Default state
-        setTracking(false);
-		mCallbackHandler = new MetaioSDKCallbackHandler();
+        mCallbackHandler = new MetaioSDKCallbackHandler();
+
+        // Reflect default states in UI
+        updateGUI();
 	}
 
 	@Override
@@ -183,6 +193,22 @@ public class ARActivity extends ARViewActivity
 		finish();
 	}
 
+    /* Start/Stop tracking
+	 */
+    public void onTrackingButtonClick(View v)
+    {
+        setTrackingEnabled( mIsTrackingPaused );
+    }
+
+    /* Freeze/Resume tracking
+	 */
+    public void onFreezeButtonClick(View v)
+    {
+        metaioSDK.setFreezeTracking(!metaioSDK.getFreezeTracking());
+        // Reflect change in GUI
+        updateGUI();
+    }
+
     /* Reset to non-tracking state
 	 */
     public void onResetButtonClick(View v)
@@ -208,7 +234,7 @@ public class ARActivity extends ARViewActivity
 
     /* Display the line model as currently tracked or not
 	 */
-    public void onModelButtonClick(View v)
+    public void onDebugButtonClick(View v)
     {
         // Switch between debug modes
         mCurrentDebugMode = (mCurrentDebugMode + 1) % mDebugModes.length;
@@ -219,32 +245,44 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onToolButtonClick(View v)
     {
-        if ( mAugmentedToolModel != null ) {
-            mAugmentedToolModel.setVisible( !mAugmentedToolModel.isVisible() );
-        }
+        mProcedureSteps.get(mCurrentStep).setToolVisible( !mProcedureSteps.get(mCurrentStep).isToolVisible() );
+    }
+
+    /* Change the current procedure step
+	 */
+    private void setCurrentStep(int step) {
+        // Hide previous step
+        mProcedureSteps.get(mCurrentStep).hide();
+        // Stop animation if any
+        //mProcedureSteps.get(mCurrentStep).stopAnimation();
+        // Switch to new step
+        mCurrentStep = step;
+        // Show new step
+        mProcedureSteps.get(mCurrentStep).show();
+        // Start animation if any
+        //mProcedureSteps.get(mCurrentStep).startAnimation();
+        // Reflect change in GUI
+        updateGUI();
     }
 
     /* Go back to previous state of the procedure when in tracking state
 	 */
     public void onPreviousButtonClick(View v)
     {
-        // Start animation
-        //setAnimationEnabled(mAugmentedModel, true);
+        setCurrentStep( (mCurrentStep + 1) % mProcedureSteps.size() );
     }
 
     /* Switch to next state of the procedure when in tracking state
 	 */
     public void onNextButtonClick(View v)
     {
-        // Stop animation
-        //setAnimationEnabled(mAugmentedModel, false);
+        setCurrentStep( (mCurrentStep - 1) % mProcedureSteps.size() );
     }
 
-    /* This method setups the activity according to tracking state
+    /* This method setups the activity GUI according to tracking state
 	 */
-    private void setTracking(Boolean enabled)
-    {
-        mIsTracking = enabled;
+    private void updateGUI() {
+        final Boolean frozen = metaioSDK.getFreezeTracking();
 
         // Hide/Show relevant buttons
         // Take care this might be called from Metaio SDK callback out of the UI thread
@@ -253,24 +291,55 @@ public class ARActivity extends ARViewActivity
             @Override
             public void run()
             {
+                if ( mIsTrackingPaused ) {
+                    mTrackingButton.setImageResource(R.drawable.play);
+                } else {
+                    mTrackingButton.setImageResource(R.drawable.stop);
+                }
+                mTrackingButton.setVisibility(View.VISIBLE);
+                mFreezeButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
                 mResetPoseButton.setVisibility(mIsTracking ? View.GONE : View.VISIBLE);
-                mResetButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
-                mModelButton.setVisibility(View.VISIBLE);
+                mAidButton.setVisibility(!mIsTrackingPaused && !frozen && !mIsTracking ? View.VISIBLE : View.GONE);
+                mResetButton.setVisibility(!mIsTrackingPaused && !frozen && mIsTracking ? View.VISIBLE : View.GONE);
+                mDebugButton.setVisibility(!mIsTrackingPaused && !frozen ? View.VISIBLE : View.GONE);
                 mToolButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
-                mAidButton.setVisibility(mIsTracking ? View.GONE : View.VISIBLE);
-                mPreviousButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
-                mNextButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
+                mPreviousButton.setVisibility(!mIsTracking || (mCurrentStep == mProcedureSteps.size() - 1) ? View.GONE : View.VISIBLE);
+                mNextButton.setVisibility(!mIsTracking || (mCurrentStep == 0) ? View.GONE : View.VISIBLE);
             }
         });
+    }
 
-        // if we detect any target, we bind the loaded augmented content to this target
-        // actually this is done automatically by assigning the model to the right COS at creation
-        /*
-        if ( (mAugmentedModel != null) && enabled )
-        {
-            mAugmentedModel.setCoordinateSystemID(trackingValue.getCoordinateSystemID());
+    /* This method update the current tracking state (tracking or not)
+	 */
+    private void setTrackingState(Boolean tracking)
+    {
+        // Keep track of state
+        mIsTracking = tracking;
+        // Reflect change in GUI
+        updateGUI();
+    }
+
+    /* This method pause or resume the tracking
+	 */
+    private void setTrackingEnabled(Boolean enabled)
+    {
+        // Pause or resume tracking depending on current state
+        if ( !enabled ) {
+            // Reset everything first
+            if ( metaioSDK.getFreezeTracking() ) {
+                metaioSDK.setFreezeTracking(false);
+            }
+            metaioSDK.sensorCommand("resetInitialPose");
+            metaioSDK.sensorCommand("reset");
+            mIsTracking = false;
+            metaioSDK.pauseTracking(true);
+        } else {
+            metaioSDK.resumeTracking();
         }
-        */
+        // Keep track of state
+        mIsTrackingPaused = !enabled;
+        // Reflect change in GUI
+        updateGUI();
     }
 
     /* This method is regularly called, calculates the distance between phone and target
@@ -332,27 +401,23 @@ public class ARActivity extends ARViewActivity
         mOcclusionModel = loadModel("mouse_tracking/SurfaceModel.obj");
         mAidModel = loadModel("mouse_tracking/VIS_INIT.obj");
         mTrackingModel = loadModel("mouse_tracking/VIS_TRACK.obj");
-        mAugmentedModel = loadModel("Screw.zip");
-        mAugmentedModel.setScale(new Vector3d(0.1f, 0.1f, 0.1f));
-        mAugmentedModel.setTranslation(new Vector3d(-0f, -33f, 17.5f));
-        mAugmentedToolModel = loadModel("Screwdriver.zip");
-        mAugmentedToolModel.setScale(new Vector3d(0.2f, 0.2f, 0.2f));
-        mAugmentedToolModel.setTranslation(new Vector3d(-0f, -33f, 50f));
-        mAugmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
+
+        // Load the procedure steps
+        IGeometry augmentedModel = loadModel("Screw.zip");
+        augmentedModel.setScale(new Vector3d(0.1f, 0.1f, 0.1f));
+        augmentedModel.setTranslation(new Vector3d(-0f, -33f, 17.5f));
+        IGeometry augmentedToolModel = loadModel("Screwdriver.zip");
+        augmentedToolModel.setScale(new Vector3d(0.2f, 0.2f, 0.2f));
+        augmentedToolModel.setTranslation(new Vector3d(-0f, -33f, 50f));
+        augmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
+
+        mProcedureSteps.add( new ProcedureStep(augmentedModel, augmentedToolModel) );
 
 		//final File envmapPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "env_map.png");
 		//metaioSDK.loadEnvironmentMap(envmapPath, EENV_MAP_FORMAT.EEMF_LATLONG);
 
 		if (mTrackingModel != null)
             mTrackingModel.setCoordinateSystemID(1);
-        if (mAugmentedModel != null)
-            mAugmentedModel.setCoordinateSystemID(1);
-        if (mAugmentedToolModel != null)
-        {
-            mAugmentedToolModel.setCoordinateSystemID(1);
-            // Not visible by default
-            mAugmentedToolModel.setVisible(false);
-        }
         if (mOcclusionModel != null)
         {
             mOcclusionModel.setCoordinateSystemID(1);
@@ -385,6 +450,10 @@ public class ARActivity extends ARViewActivity
 					mGUIView.setVisibility(View.VISIBLE);
 				}
 			});
+            // default state
+            if ( mIsTrackingPaused ) {
+                metaioSDK.pauseTracking(true);
+            }
 		}
 
         @Override
@@ -407,7 +476,7 @@ public class ARActivity extends ARViewActivity
                 // Update tracking state
                 if ( trackingValue.getCoordinateSystemID() == 1 )
                 {
-                    setTracking(trackingValue.isTrackingState());
+                    setTrackingState(trackingValue.isTrackingState());
                 }
             }
         }
@@ -447,24 +516,6 @@ public class ARActivity extends ARViewActivity
 
         return ( parent != null ) && parent.equals(model);
     }
-    /* Toggle animation on/off on a given 3D model
-	 */
-    private void setAnimationEnabled(IGeometry model, Boolean enabled)
-    {
-        if ( model == null )
-            return;
-
-        // Start animation
-        if ( enabled && ( model.getAnimationNames().size() > 0 ) )
-        {
-            model.startAnimation(model.getAnimationNames().get(0), true);
-        }
-        // Stop animation
-        else if ( !enabled )
-        {
-            model.stopAnimation();
-        }
-    }
 
     /* Load a given tracking configuration
      */
@@ -498,8 +549,9 @@ public class ARActivity extends ARViewActivity
         MetaioDebug.log("Touched Geometry: "+geometry.getName());
 
         // Start Info Activity
-        if ( mAugmentedToolModel.equals(geometry) || isChild(mAugmentedToolModel, geometry) )
+        if ( mProcedureSteps.get(mCurrentStep).isTool(geometry) )
         {
+            // TODO : open the right URL
             Intent intent = new Intent(getApplicationContext(), InformationActivity.class);
             startActivity(intent);
         }
