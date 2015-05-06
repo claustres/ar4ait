@@ -22,8 +22,6 @@ import com.metaio.sdk.jni.TrackingValuesVector;
 import com.metaio.sdk.jni.Vector3d;
 import com.metaio.tools.io.AssetsManager;
 
-import com.spherea.ar4ait.ProcedureStep;
-
 public class ARActivity extends ARViewActivity
 {
 	/**
@@ -548,13 +546,7 @@ public class ARActivity extends ARViewActivity
 	{
         MetaioDebug.log("Touched Geometry: "+geometry.getName());
 
-        // Start Info Activity
-        if ( mProcedureSteps.get(mCurrentStep).isTool(geometry) )
-        {
-            // TODO : open the right URL
-            Intent intent = new Intent(getApplicationContext(), InformationActivity.class);
-            startActivity(intent);
-        }
+        mProcedureSteps.get(mCurrentStep).onGeometryTouched(geometry, this);
 	}
 	
 }

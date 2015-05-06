@@ -1,23 +1,14 @@
 package com.spherea.ar4ait;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.ImageButton;
 
-import com.metaio.sdk.ARViewActivity;
-import com.metaio.sdk.MetaioDebug;
 import com.metaio.sdk.jni.IGeometry;
-import com.metaio.sdk.jni.IMetaioSDKCallback;
-import com.metaio.sdk.jni.Rotation;
-import com.metaio.sdk.jni.TrackingValues;
-import com.metaio.sdk.jni.TrackingValuesVector;
-import com.metaio.sdk.jni.Vector3d;
 import com.metaio.tools.io.AssetsManager;
 
 import java.io.File;
+import java.net.MalformedURLException;
 
 public class ProcedureStep
 {
@@ -132,5 +123,25 @@ public class ProcedureStep
 	{
         return ( mAugmentedToolModel.equals(geometry) || isChild(mAugmentedToolModel, geometry) );
 	}
-	
+
+    public Boolean onGeometryTouched(IGeometry geometry, Activity context)
+    {
+        // Start Info Activity
+        if ( mAugmentedToolModel.equals(geometry) || isChild(mAugmentedToolModel, geometry) )
+        {
+            final File filePath = AssetsManager.getAssetPathAsFile(context.getApplicationContext(), "16776-MU-KB-051-B-manuel-utilisateur-CLAPET.pdf");
+
+            Intent intent = new Intent(context.getApplicationContext(), InformationActivity.class);
+            try {
+                intent.putExtra("URL", filePath.toURI().toURL().toString());
+                //intent.putExtra("URL", filePath.toURI().toURL().toString() + "#page=35");
+                context.startActivity(intent);
+                return true;
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
 }
