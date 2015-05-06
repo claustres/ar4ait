@@ -22,14 +22,27 @@ public class ProcedureStep
      */
     private IGeometry mAugmentedToolModel = null;
 
+    /**
+     * Description for the step
+     */
+    private CharSequence mDescription = "";
+
+    /**
+     * Warning (if any) for the step
+     */
+    private CharSequence mWarning = "";
+
     /* Constructor
       */
     public ProcedureStep(IGeometry augmentedModel, IGeometry augmentedToolModel) {
         mAugmentedModel = augmentedModel;
         mAugmentedToolModel = augmentedToolModel;
 
-        if (mAugmentedModel != null)
+        if (mAugmentedModel != null) {
             mAugmentedModel.setCoordinateSystemID(1);
+            // Not visible by default
+            mAugmentedModel.setVisible(false);
+        }
         if (mAugmentedToolModel != null)
         {
             mAugmentedToolModel.setCoordinateSystemID(1);
@@ -38,12 +51,42 @@ public class ProcedureStep
         }
     }
 
+    /* Get any description message
+	 */
+    public CharSequence getDescription()
+    {
+        return mDescription;
+    }
+
+    /* Set description message
+	 */
+    public void setDescription(CharSequence description)
+    {
+        mDescription = description;
+    }
+
+    /* Get any warning message
+	 */
+    public CharSequence getWarning()
+    {
+        return mWarning;
+    }
+
+    /* Set warning message
+	 */
+    public void setWarning(CharSequence warning)
+    {
+        mWarning = warning;
+    }
+
     /* Display the model associated with the step
       */
     public void show()
     {
         if ( mAugmentedModel != null ) {
             mAugmentedModel.setVisible( true );
+            // Start animation if any
+            startAnimation();
         }
     }
 
@@ -53,6 +96,8 @@ public class ProcedureStep
     {
         if ( mAugmentedModel != null ) {
             mAugmentedModel.setVisible( false );
+            // Stop animation if any
+            stopAnimation();
         }
     }
 

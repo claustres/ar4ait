@@ -10,4 +10,6 @@
     <string name="btnClose">Close</string>
     <string name="btnPrevious">Previous step</string>
     <string name="btnNext">Next step</string>
+    <string name="warning">Warning</string>
+    <string name="description">Description</string>
 </resources>

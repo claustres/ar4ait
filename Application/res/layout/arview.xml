@@ -97,6 +97,24 @@
             android:src="@drawable/help" />
     </LinearLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/warningBox"
+        android:textStyle="bold"
+        android:background="#AA0000"
+        android:textColorHighlight="#000000"
+        android:textIsSelectable="false" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/descriptionBox"
+        android:textIsSelectable="false" />
+
     <ImageButton
         android:id="@+id/previousButton"
         android:layout_width="64dp"

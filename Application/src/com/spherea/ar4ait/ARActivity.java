@@ -6,10 +6,12 @@ import java.util.List;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.MotionEvent;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.metaio.sdk.ARViewActivity;
 import com.metaio.sdk.MetaioDebug;
@@ -67,7 +69,7 @@ public class ARActivity extends ARViewActivity
     private int mCurrentStep = 0;
 
     /**
-     * Activity buttons
+     * Activity widgets
      */
     ImageButton mTrackingButton = null;
     ImageButton mFreezeButton = null;
@@ -78,6 +80,9 @@ public class ARActivity extends ARViewActivity
     ImageButton mAidButton = null;
     ImageButton mPreviousButton = null;
     ImageButton mNextButton = null;
+
+    TextView    mDescriptionBox = null;
+    TextView    mWarningBox = null;
 
     /**
      * Activity touch events
@@ -109,6 +114,9 @@ public class ARActivity extends ARViewActivity
         mToolButton = (ImageButton)mGUIView.findViewById(R.id.toolButton);
         mPreviousButton = (ImageButton)mGUIView.findViewById(R.id.previousButton);
         mNextButton = (ImageButton)mGUIView.findViewById(R.id.nextButton);
+
+        mDescriptionBox = (TextView)mGUIView.findViewById(R.id.descriptionBox);
+        mWarningBox = (TextView)mGUIView.findViewById(R.id.warningBox);
 
         mCallbackHandler = new MetaioSDKCallbackHandler();
 
@@ -243,22 +251,71 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onToolButtonClick(View v)
     {
-        mProcedureSteps.get(mCurrentStep).setToolVisible( !mProcedureSteps.get(mCurrentStep).isToolVisible() );
+        mProcedureSteps.get(mCurrentStep).setToolVisible(!mProcedureSteps.get(mCurrentStep).isToolVisible());
+    }
+
+    /* Show the current procedure step
+	 */
+    private void updateBox(TextView view, String text) {
+        if ( text.isEmpty() ) {
+            view.setVisibility(View.GONE);
+        } else {
+            view.setVisibility(View.VISIBLE);
+            view.setText(text);
+        }
+    }
+
+    /* Show the current procedure step
+	 */
+    private void showCurrentStep() {
+        // Show model
+        mProcedureSteps.get(mCurrentStep).show();
+        // And generic information
+        // Take care this might be called from Metaio SDK callback out of the UI thread
+        if ( Looper.myLooper() == Looper.getMainLooper() ) {
+            updateBox(mDescriptionBox, mProcedureSteps.get(mCurrentStep).getDescription().toString());
+            updateBox(mWarningBox, mProcedureSteps.get(mCurrentStep).getWarning().toString());
+        } else {
+            // Take care this might be called from Metaio SDK callback out of the UI thread
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    updateBox(mDescriptionBox, mProcedureSteps.get(mCurrentStep).getDescription().toString());
+                    updateBox(mWarningBox, mProcedureSteps.get(mCurrentStep).getWarning().toString());
+                }
+            });
+        }
+    }
+
+    /* Hide the current procedure step
+	 */
+    private void hideCurrentStep() {
+        // Hide model
+        mProcedureSteps.get(mCurrentStep).hide();
+        // Take care this might be called from Metaio SDK callback out of the UI thread
+        if ( Looper.myLooper() == Looper.getMainLooper() ) {
+            mDescriptionBox.setVisibility(View.GONE);
+            mWarningBox.setVisibility(View.GONE);
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mDescriptionBox.setVisibility(View.GONE);
+                    mWarningBox.setVisibility(View.GONE);
+                }
+            });
+        }
     }
 
     /* Change the current procedure step
 	 */
     private void setCurrentStep(int step) {
         // Hide previous step
-        mProcedureSteps.get(mCurrentStep).hide();
-        // Stop animation if any
-        //mProcedureSteps.get(mCurrentStep).stopAnimation();
+        hideCurrentStep();
         // Switch to new step
         mCurrentStep = step;
         // Show new step
-        mProcedureSteps.get(mCurrentStep).show();
-        // Start animation if any
-        //mProcedureSteps.get(mCurrentStep).startAnimation();
+        showCurrentStep();
         // Reflect change in GUI
         updateGUI();
     }
@@ -267,14 +324,14 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onPreviousButtonClick(View v)
     {
-        setCurrentStep( (mCurrentStep + 1) % mProcedureSteps.size() );
+        setCurrentStep((mCurrentStep - 1) % mProcedureSteps.size());
     }
 
     /* Switch to next state of the procedure when in tracking state
 	 */
     public void onNextButtonClick(View v)
     {
-        setCurrentStep( (mCurrentStep - 1) % mProcedureSteps.size() );
+        setCurrentStep( (mCurrentStep + 1) % mProcedureSteps.size() );
     }
 
     /* This method setups the activity GUI according to tracking state
@@ -301,8 +358,8 @@ public class ARActivity extends ARViewActivity
                 mResetButton.setVisibility(!mIsTrackingPaused && !frozen && mIsTracking ? View.VISIBLE : View.GONE);
                 mDebugButton.setVisibility(!mIsTrackingPaused && !frozen ? View.VISIBLE : View.GONE);
                 mToolButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
-                mPreviousButton.setVisibility(!mIsTracking || (mCurrentStep == mProcedureSteps.size() - 1) ? View.GONE : View.VISIBLE);
-                mNextButton.setVisibility(!mIsTracking || (mCurrentStep == 0) ? View.GONE : View.VISIBLE);
+                mPreviousButton.setVisibility(!mIsTracking || (mCurrentStep == 0) ? View.GONE : View.VISIBLE);
+                mNextButton.setVisibility(!mIsTracking || (mCurrentStep == mProcedureSteps.size() - 1) ? View.GONE : View.VISIBLE);
             }
         });
     }
@@ -311,10 +368,17 @@ public class ARActivity extends ARViewActivity
 	 */
     private void setTrackingState(Boolean tracking)
     {
-        // Keep track of state
-        mIsTracking = tracking;
-        // Reflect change in GUI
-        updateGUI();
+        if ( mIsTracking != tracking ) {
+            // Keep track of state
+            mIsTracking = tracking;
+            // Reflect change in GUI
+            updateGUI();
+            if ( mIsTracking ) {
+                showCurrentStep();
+            } else {
+                hideCurrentStep();
+            }
+        }
     }
 
     /* This method pause or resume the tracking
@@ -327,6 +391,7 @@ public class ARActivity extends ARViewActivity
             if ( metaioSDK.getFreezeTracking() ) {
                 metaioSDK.setFreezeTracking(false);
             }
+            hideCurrentStep();
             metaioSDK.sensorCommand("resetInitialPose");
             metaioSDK.sensorCommand("reset");
             mIsTracking = false;
@@ -396,6 +461,8 @@ public class ARActivity extends ARViewActivity
         mAugmentedToolModel.setTranslation(new Vector3d(-10.7f, 57.4f, 66f));
         mAugmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
         */
+
+        /*
         mOcclusionModel = loadModel("mouse_tracking/SurfaceModel.obj");
         mAidModel = loadModel("mouse_tracking/VIS_INIT.obj");
         mTrackingModel = loadModel("mouse_tracking/VIS_TRACK.obj");
@@ -408,8 +475,25 @@ public class ARActivity extends ARViewActivity
         augmentedToolModel.setScale(new Vector3d(0.2f, 0.2f, 0.2f));
         augmentedToolModel.setTranslation(new Vector3d(-0f, -33f, 50f));
         augmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
+        */
 
-        mProcedureSteps.add( new ProcedureStep(augmentedModel, augmentedToolModel) );
+        mOcclusionModel = loadModel("platine_tracking/SurfaceModel.obj");
+        //mOcclusionModel = loadModel("platine_tracking/lowpoly_model_3d_v2.obj");
+        mAidModel = loadModel("platine_tracking/VIS_INIT.obj");
+        mTrackingModel = loadModel("platine_tracking/VIS_TRACK.obj");
+
+        // Load the procedure steps
+        IGeometry augmentedModel = loadModel("platine_step_1.zip");
+        IGeometry augmentedToolModel = loadModel("platine_step_1_tools.zip");
+        ProcedureStep step1 = new ProcedureStep(augmentedModel, augmentedToolModel);
+        step1.setDescription("Fixation du raidisseur");
+        step1.setWarning("Monter le raidisseur du côté non fraisé des Sub-D 9 points");
+        mProcedureSteps.add( step1 );
+
+        augmentedModel = loadModel("platine_step_1.zip");
+        ProcedureStep step2 = new ProcedureStep(augmentedModel, augmentedToolModel);
+        step2.setDescription("Fixation des deux cornières");
+        mProcedureSteps.add( step2 );
 
 		//final File envmapPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "env_map.png");
 		//metaioSDK.loadEnvironmentMap(envmapPath, EENV_MAP_FORMAT.EEMF_LATLONG);
@@ -429,7 +513,8 @@ public class ARActivity extends ARViewActivity
         metaioSDK.setCameraParameters(cameraPath);
         // Then tracking settings
 		//setTrackingConfiguration("cup_tracking/Tracking.xml");
-        setTrackingConfiguration("mouse_tracking/Tracking.xml");
+        //setTrackingConfiguration("mouse_tracking/Tracking.xml");
+        setTrackingConfiguration("platine_tracking/Tracking.xml");
 	}
 
     /* Manage Metaio SDK callbacks
