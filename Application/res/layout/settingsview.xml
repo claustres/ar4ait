@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:rsb="http://schemas.android.com/apk/res-auto"
+
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:layout_alignParentLeft="true"
+    android:layout_centerVertical="true"
+    android:background="#80000000"
+    >
+
+    <LinearLayout
+        android:id="@+id/generalBehaviour"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="18dp"
+            android:text="@string/settingsGeneralBehaviour"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settingsTrackingMode"/>
+        <RadioGroup
+            android:id="@+id/modeRadioGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/initializeOnceModeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsModeInitializeOnce"
+                android:checked="true" />
+            <RadioButton
+                android:id="@+id/edgeOnlyModeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsModeEdgeOnly" />
+            <RadioButton
+                android:id="@+id/hybridModeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsModeHybrid" />
+        </RadioGroup>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/edgeAlignmentParameters"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="18dp"
+            android:text="@string/settingsEdgeAlignmentParameters"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settingsNumFeatures"/>
+
+        <com.spherea.ar4ait.RangeSeekBar
+            android:id="@+id/numFeaturesEdgeAlignmentSeekBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            rsb:absoluteMinValue="10"
+            rsb:absoluteMaxValue="10000"
+            rsb:singleThumb="true"
+            />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsMinQuality"/>
+
+            <com.spherea.ar4ait.RangeSeekBar
+                android:id="@+id/minQualityEdgeAlignmentSeekBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                rsb:absoluteMinValue="0.0"
+                rsb:absoluteMaxValue="1.0"
+                rsb:singleThumb="true"
+                />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsSearchRangeRelative"/>
+
+            <com.spherea.ar4ait.RangeSeekBar
+                android:id="@+id/searchRangeRelativeEdgeAlignmentSeekBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                rsb:absoluteMinValue="0.0"
+                rsb:absoluteMaxValue="1.0"
+                rsb:singleThumb="true"
+                />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settingsVisibilityTestDepthBias"/>
+
+        <com.spherea.ar4ait.RangeSeekBar
+            android:id="@+id/visibilityTestDepthBiasEdgeAlignmentSeekBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            rsb:absoluteMinValue="0.0"
+            rsb:absoluteMaxValue="1.0"
+            rsb:singleThumb="true"
+            />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/edgeTrackingParameters"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="18dp"
+            android:text="@string/settingsEdgeTrackingParameters"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsMinQuality"/>
+
+            <com.spherea.ar4ait.RangeSeekBar
+                android:id="@+id/minQualityEdgeTrackingSeekBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                rsb:absoluteMinValue="0.0"
+                rsb:absoluteMaxValue="1.0"
+                rsb:singleThumb="true"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settingsSearchRangeRelative"/>
+
+            <com.spherea.ar4ait.RangeSeekBar
+                android:id="@+id/searchRangeRelativeEdgeTrackingSeekBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                rsb:absoluteMinValue="0.0"
+                rsb:absoluteMaxValue="1.0"
+                rsb:singleThumb="true"
+                />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/toolBar"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/saveSettingsButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="fitXY"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/btnSaveSettings"
+            android:onClick="onSaveSettingsButtonClick"
+            android:src="@drawable/gear_diskette" />
+
+        <Space
+            android:layout_width="20dp"
+            android:layout_height="wrap_content" />
+
+        <ImageButton
+            android:id="@+id/closeSettingsButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="fitXY"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/btnCloseSettings"
+            android:onClick="onCloseSettingsButtonClick"
+            android:src="@drawable/gear_close" />
+
+    </LinearLayout>
+
+</LinearLayout>
+

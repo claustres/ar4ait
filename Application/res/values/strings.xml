@@ -5,7 +5,23 @@
     <string name="btnTool">Tool</string>
     <string name="btnFeatures">Features</string>
     <string name="btnReset">Reset</string>
-    <string name="btnClose">close</string>
+    <string name="btnClose">Close</string>
+    <string name="btnConfigure">Configure</string>
+    <string name="btnSaveSettings">Save</string>
+    <string name="btnCloseSettings">Close</string>
+    <string name="btnSave">Save</string>
     <string name="btnPrevious">previous</string>
     <string name="btnNext">next</string>
+    <string name="settingsGeneralBehaviour">General Behaviour</string>
+    <string name="settingsTrackingMode">Tracking Mode</string>
+    <string name="settingsModeInitializeOnce">Initialize Once</string>
+    <string name="settingsModeEdgeOnly">Edge Only</string>
+    <string name="settingsModeHybrid">Hybrid</string>
+    <string name="settingsEdgeAlignmentParameters">Edge Alignment</string>
+    <string name="settingsEdgeTrackingParameters">Edge Tracking</string>
+    <string name="settingsNumFeatures">Num Features</string>
+    <string name="settingsMinQuality">Min Quality</string>
+    <string name="settingsSearchRangeRelative">Search Range Relative</string>
+    <string name="settingsVisibilityTestDepthBias">Visibility Test/Depth Bias</string>
+    <string name="labelTrackingParameterSaved">Tracking Parameters Saved</string>
 </resources>

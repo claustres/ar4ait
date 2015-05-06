@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:visibility="gone" >
+
+    <fragment android:name="com.spherea.ar4ait.SettingsView"
+        android:id="@+id/settingsView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:layout="@layout/settingsview" />
 
     <ImageButton
         android:id="@+id/closeButton"
@@ -75,6 +83,17 @@
             android:contentDescription="@+strings/btnAid"
             android:onClick="onAidButtonClick"
             android:src="@drawable/help" />
+        <ImageButton
+            android:id="@+id/settingsButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:background="@android:color/transparent"
+            android:layout_marginTop="10dp"
+            android:contentDescription="@+strings/btnConfig"
+            android:onClick="onSettingsButtonClick"
+            android:src="@drawable/gear" />
     </LinearLayout>
 
     <ImageButton
