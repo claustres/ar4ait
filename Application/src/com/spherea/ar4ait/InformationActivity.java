@@ -33,7 +33,8 @@ public class InformationActivity extends Activity
 
         mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         mWebView.setWebViewClient(new WebViewHandler());
-        mWebView.loadUrl("http://www.google.fr");
+        String url = getIntent().getStringExtra("URL");
+        mWebView.loadUrl(url);
         mWebView.setVisibility(View.VISIBLE);
 	}
 

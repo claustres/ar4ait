@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">AR4AIT</string>
+    <string name="btnTracking">(Un)Track</string>
+    <string name="btnFreeze">(Un)Freeze</string>
+    <string name="btnResetPose">Reset pose</string>
+    <string name="btnDebug">Debug mode</string>
+    <string name="warning">Warning</string>
+    <string name="description">Description</string>
     <string name="btnAid">Aid</string>
     <string name="btnModel">Model</string>
     <string name="btnTool">Tool</string>

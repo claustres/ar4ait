@@ -31,6 +31,26 @@
         android:layout_centerVertical="true"
         >
         <ImageButton
+            android:id="@+id/trackingButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:background="@android:color/transparent"
+            android:contentDescription="@+strings/btnTracking"
+            android:onClick="onTrackingButtonClick"
+            android:src="@drawable/play" />
+        <ImageButton
+            android:id="@+id/freezeButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:background="@android:color/transparent"
+            android:contentDescription="@+strings/btnFreeze"
+            android:onClick="onFreezeButtonClick"
+            android:src="@drawable/animation" />
+        <ImageButton
             android:id="@+id/resetPoseButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
@@ -51,15 +71,15 @@
             android:onClick="onResetButtonClick"
             android:src="@drawable/reload" />
         <ImageButton
-            android:id="@+id/modelButton"
+            android:id="@+id/debugButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:scaleType="fitXY"
             android:layout_alignParentRight="true"
             android:background="@android:color/transparent"
             android:layout_marginTop="10dp"
-            android:contentDescription="@+strings/btnModel"
-            android:onClick="onModelButtonClick"
+            android:contentDescription="@+strings/btnDebug"
+            android:onClick="onDebugButtonClick"
             android:src="@drawable/pyramid" />
         <ImageButton
             android:id="@+id/toolButton"
@@ -95,6 +115,24 @@
             android:onClick="onSettingsButtonClick"
             android:src="@drawable/gear" />
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/warningBox"
+        android:textStyle="bold"
+        android:background="#AA0000"
+        android:textColorHighlight="#000000"
+        android:textIsSelectable="false" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/descriptionBox"
+        android:textIsSelectable="false" />
 
     <ImageButton
         android:id="@+id/previousButton"
