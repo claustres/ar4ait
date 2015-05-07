@@ -368,7 +368,7 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onToolButtonClick(View v)
     {
-        mProcedureSteps.get(mCurrentStep).setToolVisible(!mProcedureSteps.get(mCurrentStep).isToolVisible());
+        mProcedureSteps.get(mCurrentStep).setToolsVisible(!mProcedureSteps.get(mCurrentStep).areToolsVisible());
     }
 
     /* Show the current procedure step
@@ -574,22 +574,52 @@ public class ARActivity extends ARViewActivity
         mTrackingModel = loadModel("platine_joint_tracking/VIS_TRACK.obj");
 
         // Load the procedure steps
+
         IGeometry augmentedModel = loadModel("platine_steps/platine_step_1.obj");
-        IGeometry augmentedToolModel = loadModel("platine_steps/platine_step_1_tools.obj");
-        augmentedToolModel.setScale(new Vector3d(3f, 3f, 3f));
-        augmentedToolModel.setTranslation(new Vector3d(-0f, -340f, 100f));
-        ProcedureStep step1 = new ProcedureStep(augmentedModel, augmentedToolModel);
+        ProcedureStep step1 = new ProcedureStep(augmentedModel);
         step1.setDescription("Fixation du raidisseur");
         step1.setWarning("Monter le raidisseur du côté non fraisé des Sub-D 9 points");
+
+        IGeometry ecrouM4 = loadModel("platine_steps/Ecrou_M4.obj");
+        if (ecrouM4 != null) {
+            ecrouM4.setTranslation(new Vector3d(-0f, -340f, 0f));
+            ecrouM4.setScale(new Vector3d(5f, 5f, 5f));
+            ecrouM4.setName("Ecrou M4");
+            step1.addAugmentedToolModel(ecrouM4);
+        }
+
+        IGeometry rondelleBSM4 = loadModel("platine_steps/Rondelle_BS_M4.obj");
+        if (rondelleBSM4 != null) {
+            rondelleBSM4.setTranslation(new Vector3d(-0f, -340f, 0f));
+            rondelleBSM4.setScale(new Vector3d(5f, 5f, 5f));
+            rondelleBSM4.setName("Rondelle BS M4");
+            step1.addAugmentedToolModel(rondelleBSM4);
+        }
+
+        IGeometry rondelleZ4 = loadModel("platine_steps/Rondelle_Z4.obj");
+        if (rondelleZ4 != null) {
+            rondelleZ4.setTranslation(new Vector3d(-0f, -340f, 0f));
+            rondelleZ4.setScale(new Vector3d(5f, 5f, 5f));
+            rondelleZ4.setName("Rondelle Z4");
+            step1.addAugmentedToolModel(rondelleZ4);
+        }
+
+        IGeometry visCHCM416 = loadModel("platine_steps/VIS_CHC_M4x16.obj");
+        if (visCHCM416 != null) {
+            visCHCM416.setTranslation(new Vector3d(-0f, -340f, 0f));
+            visCHCM416.setScale(new Vector3d(4f, 4f, 4f));
+            visCHCM416.setName("VIS CHC M4x16");
+            step1.addAugmentedToolModel(visCHCM416);
+        }
         mProcedureSteps.add( step1 );
 
         augmentedModel = loadModel("platine_steps/platine_step_2.obj");
-        ProcedureStep step2 = new ProcedureStep(augmentedModel, augmentedToolModel);
+        ProcedureStep step2 = new ProcedureStep(augmentedModel);
         step2.setDescription("Fixation des deux cornières (éclaté)");
         mProcedureSteps.add( step2 );
 
         augmentedModel = loadModel("platine_steps/platine_step_3.obj");
-        ProcedureStep step3 = new ProcedureStep(augmentedModel, augmentedToolModel);
+        ProcedureStep step3 = new ProcedureStep(augmentedModel);
         step3.setDescription("Fixation des deux cornières (fini)");
         mProcedureSteps.add( step3 );
 
