@@ -15,8 +15,10 @@ public class Procedure
     private CharSequence mName = "";
 
 
-    /* Constructor
-      */
+    /**
+     * Constructs a new procedure with the give name
+     * @param name specifies the name of the procedure
+     */
     public Procedure(CharSequence name) {
         mName = name;
     }

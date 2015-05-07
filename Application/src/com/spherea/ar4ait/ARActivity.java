@@ -607,6 +607,8 @@ public class ARActivity extends ARViewActivity
 
         // Then tracking settings
         File trackingParametersFile = AssetsManager.getAssetPathAsFile(getApplicationContext(),"platine_tracking/Tracking.xml");
+        //ProcedureStorage procedureStorage = new ProcedureStorage(mProcedure, getApplicationContext());
+        //File trackingParametersFile = new File(procedureStorage.getTrackingParametersFilePath());
         try {
             // set tracking configuration
             if (metaioSDK.setTrackingConfiguration(trackingParametersFile)) {
