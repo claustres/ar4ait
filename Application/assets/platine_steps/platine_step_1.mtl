@@ -1,0 +1,12 @@
+# Blender MTL File: 'platine_step_1.blend'
+# Material Count: 1
+
+newmtl metal
+Ns 17.647059
+Ka 0.000000 0.000000 0.000000
+Kd 0.280800 0.280800 0.280800
+Ks 0.486897 0.486897 0.486897
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd platine_step_3.jpg

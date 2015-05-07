@@ -206,15 +206,24 @@ public class ARActivity extends ARViewActivity
 
         try
         {
-            checkDistanceToTarget();
+            // Not used yet
+            //checkDistanceToTarget();
             // Update headlight
             if ( mHeadLight != null ) {
-                /*
-                final Vector3d lightDir = new Vector3d(
-                        (float)Math.cos(1.2*time),
-                        (float)Math.sin(0.25*time),
-                        (float)Math.sin(0.8*time));
-                        */
+                /* BUG : computing camera position gives incoherent results (the camera is positioned by default in -Z instead of -X)
+                TrackingValues trackingValues = metaioSDK.getTrackingValues(1, false);
+
+                // 3D point on the coordinate system
+                Vector3d point = new Vector3d(0.0f, 0.0f, 0.0f);
+                // camera position w.r.t. to the 3D point
+                Vector3d cameraPosition = trackingValues.getTranslation();
+                cameraPosition.add(trackingValues.getRotation().rotatePoint(point));
+
+                // calculate the lighting direction for headlight
+                Vector3d direction = cameraPosition.multiply(-1.0f);
+                direction.normalize();
+                mHeadLight.setDirection(direction);
+                */
             }
         }
         catch (Exception e)
@@ -284,8 +293,10 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onAidButtonClick(View v)
     {
-        if ( mAidModel != null ) {
+        if ( !mIsTracking && (mAidModel != null) ) {
             mAidModel.setVisible( !mAidModel.isVisible() );
+        } else if ( mIsTracking && (mTrackingModel != null) ) {
+            mTrackingModel.setVisible( !mTrackingModel.isVisible() );
         }
     }
 
@@ -421,7 +432,7 @@ public class ARActivity extends ARViewActivity
                 mTrackingButton.setVisibility(View.VISIBLE);
                 mFreezeButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
                 mResetPoseButton.setVisibility(mIsTracking ? View.GONE : View.VISIBLE);
-                mAidButton.setVisibility(!mIsTrackingPaused && !frozen && !mIsTracking ? View.VISIBLE : View.GONE);
+                mAidButton.setVisibility(!mIsTrackingPaused ? View.VISIBLE : View.GONE);
                 mResetButton.setVisibility(!mIsTrackingPaused && !frozen && mIsTracking ? View.VISIBLE : View.GONE);
                 mDebugButton.setVisibility(!mIsTrackingPaused && !frozen ? View.VISIBLE : View.GONE);
                 mToolButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
@@ -529,43 +540,13 @@ public class ARActivity extends ARViewActivity
         // Initialize lighting
         createHeadlight();
 
-        // If you want to occlude the augmented content
-        /*
-        mOcclusionModel = loadModel("cup_tracking/SurfaceModel.obj");
-        mAidModel = loadModel("cup_tracking/VIS_INIT.obj");
-        mAugmentedModel = loadModel("Screw.zip");
-        mAugmentedModel.setScale(new Vector3d(0.05f, 0.05f, 0.05f));
-        mAugmentedModel.setTranslation(new Vector3d(-11f, 58f, 44f));
-        //mAugmentedModel.setRotation(new Rotation(0f, 0f, 0f));
-        mAugmentedToolModel = loadModel("Screwdriver.zip");
-        mAugmentedToolModel.setScale(new Vector3d(0.3f, 0.3f, 0.3f));
-        mAugmentedToolModel.setTranslation(new Vector3d(-10.7f, 57.4f, 66f));
-        mAugmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
-        */
-
-        /*
-        mOcclusionModel = loadModel("mouse_tracking/SurfaceModel.obj");
-        mAidModel = loadModel("mouse_tracking/VIS_INIT.obj");
-        mTrackingModel = loadModel("mouse_tracking/VIS_TRACK.obj");
+        mOcclusionModel = loadModel("platine_joint_tracking/SurfaceModel.obj");
+        mAidModel = loadModel("platine_joint_tracking/VIS_INIT.obj");
+        mTrackingModel = loadModel("platine_joint_tracking/VIS_TRACK.obj");
 
         // Load the procedure steps
-        IGeometry augmentedModel = loadModel("Screw.zip");
-        augmentedModel.setScale(new Vector3d(0.1f, 0.1f, 0.1f));
-        augmentedModel.setTranslation(new Vector3d(-0f, -33f, 17.5f));
-        IGeometry augmentedToolModel = loadModel("Screwdriver.zip");
-        augmentedToolModel.setScale(new Vector3d(0.2f, 0.2f, 0.2f));
-        augmentedToolModel.setTranslation(new Vector3d(-0f, -33f, 50f));
-        augmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
-        */
-
-        mOcclusionModel = loadModel("platine_tracking/SurfaceModel.obj");
-        //mOcclusionModel = loadModel("platine_tracking/lowpoly_model_3d_v2.obj");
-        mAidModel = loadModel("platine_tracking/VIS_INIT.obj");
-        mTrackingModel = loadModel("platine_tracking/VIS_TRACK.obj");
-
-        // Load the procedure steps
-        IGeometry augmentedModel = loadModel("platine_step_1.obj");
-        IGeometry augmentedToolModel = loadModel("platine_step_1_tools.obj");
+        IGeometry augmentedModel = loadModel("platine_steps/platine_step_1.obj");
+        IGeometry augmentedToolModel = loadModel("platine_steps/platine_step_1_tools.obj");
         augmentedToolModel.setScale(new Vector3d(3f, 3f, 3f));
         augmentedToolModel.setTranslation(new Vector3d(-0f, -340f, 100f));
         ProcedureStep step1 = new ProcedureStep(augmentedModel, augmentedToolModel);
@@ -573,14 +554,14 @@ public class ARActivity extends ARViewActivity
         step1.setWarning("Monter le raidisseur du côté non fraisé des Sub-D 9 points");
         mProcedureSteps.add( step1 );
 
-        augmentedModel = loadModel("platine_step_2.obj");
+        augmentedModel = loadModel("platine_steps/platine_step_2.obj");
         ProcedureStep step2 = new ProcedureStep(augmentedModel, augmentedToolModel);
-        step2.setDescription("Fixation des deux cornières");
+        step2.setDescription("Fixation des deux cornières (éclaté)");
         mProcedureSteps.add( step2 );
 
-        augmentedModel = loadModel("platine_step_3.obj");
+        augmentedModel = loadModel("platine_steps/platine_step_3.obj");
         ProcedureStep step3 = new ProcedureStep(augmentedModel, augmentedToolModel);
-        step3.setDescription("Fixation des deux cornières");
+        step3.setDescription("Fixation des deux cornières (fini)");
         mProcedureSteps.add( step3 );
 
 		final File envmapPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "env_map.png");
@@ -601,7 +582,7 @@ public class ARActivity extends ARViewActivity
         metaioSDK.setCameraParameters(cameraPath);
 
         // Then tracking settings
-        loadTrackingConfiguration("platine_tracking/Tracking.xml");
+        loadTrackingConfiguration("platine_joint_tracking/Tracking.xml");
 
         mControlPanel.refresh();
 	}
