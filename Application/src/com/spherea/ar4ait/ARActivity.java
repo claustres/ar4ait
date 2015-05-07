@@ -214,22 +214,21 @@ public class ARActivity extends ARViewActivity
         {
             // Not used yet
             //checkDistanceToTarget();
+
             // Update headlight
             if ( mHeadLight != null ) {
-                /* BUG : computing camera position gives incoherent results (the camera is positioned by default in -Z instead of -X)
                 TrackingValues trackingValues = metaioSDK.getTrackingValues(1, false);
 
                 // 3D point on the coordinate system
                 Vector3d point = new Vector3d(0.0f, 0.0f, 0.0f);
                 // camera position w.r.t. to the 3D point
-                Vector3d cameraPosition = trackingValues.getTranslation();
-                cameraPosition.add(trackingValues.getRotation().rotatePoint(point));
+                Vector3d cameraPosition = trackingValues.getTranslation().multiply(-1.0f);
+                cameraPosition = trackingValues.getRotation().inverse().rotatePoint(cameraPosition);
 
                 // calculate the lighting direction for headlight
                 Vector3d direction = cameraPosition.multiply(-1.0f);
                 direction.normalize();
                 mHeadLight.setDirection(direction);
-                */
             }
         }
         catch (Exception e)
