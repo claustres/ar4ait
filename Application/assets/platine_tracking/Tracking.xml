@@ -136,7 +136,7 @@
                             <!-- Absolute distance to search edges in image for (in [mm] world scale!) Should be ~25% of the initialization range. Only one of SearchRange and SearchRangeRelative is used. Relative is preferred during execution. -->
                             <!--<SearchRange>0</SearchRange>-->
                             <!-- Relative distance to search edges in image for (in multiple of line model sizes). Should be ~25% of the initialization range. Only one of SearchRange and SearchRangeRelative is used. Relative is preferred during execution. -->
-                            <SearchRangeRelative>0.09</SearchRangeRelative>
+                            <SearchRangeRelative>0.5</SearchRangeRelative>
                             <!-- Determines total search range and accuracy but reduces framerate. Should be significantly lower than for initialization
 								Default: 4-->
                             <NumIterations>4</NumIterations>

@@ -22,7 +22,9 @@ import android.widget.Toast;
 import com.metaio.sdk.ARViewActivity;
 import com.metaio.sdk.MetaioDebug;
 import com.metaio.sdk.jni.EENV_MAP_FORMAT;
+import com.metaio.sdk.jni.ELIGHT_TYPE;
 import com.metaio.sdk.jni.IGeometry;
+import com.metaio.sdk.jni.ILight;
 import com.metaio.sdk.jni.IMetaioSDKCallback;
 import com.metaio.sdk.jni.Rotation;
 import com.metaio.sdk.jni.TrackingValues;
@@ -61,6 +63,11 @@ public class ARActivity extends ARViewActivity
 	 * Pose visualization model
 	 */
 	private IGeometry mAidModel = null;
+
+    /**
+     * Scene head light
+     */
+    private ILight mHeadLight = null;
 
     /**
      * Debug flag to enabled model rendering
@@ -133,12 +140,10 @@ public class ARActivity extends ARViewActivity
         mSettingsPanel = (LinearLayout)mGUIView.findViewById(R.id.settingsView);
         mSettingsPanel.setVisibility(View.GONE);
 
-        mControlPanel = (SettingsView)getFragmentManager().findFragmentById(R.id.settingsView);
-
-        // Default state
-		mCallbackHandler = new MetaioSDKCallbackHandler();
         mDescriptionBox = (TextView)mGUIView.findViewById(R.id.descriptionBox);
         mWarningBox = (TextView)mGUIView.findViewById(R.id.warningBox);
+
+        mControlPanel = (SettingsView)getFragmentManager().findFragmentById(R.id.settingsView);
 
         mCallbackHandler = new MetaioSDKCallbackHandler();
 
@@ -208,6 +213,15 @@ public class ARActivity extends ARViewActivity
         try
         {
             checkDistanceToTarget();
+            // Update headlight
+            if ( mHeadLight != null ) {
+                /*
+                final Vector3d lightDir = new Vector3d(
+                        (float)Math.cos(1.2*time),
+                        (float)Math.sin(0.25*time),
+                        (float)Math.sin(0.8*time));
+                        */
+            }
         }
         catch (Exception e)
         {
@@ -260,7 +274,7 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onResetButtonClick(View v)
     {
-        metaioSDK.sensorCommand("reset");
+        command("reset");
     }
 
     /**
@@ -268,7 +282,7 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onResetPoseButtonClick(View v)
     {
-        metaioSDK.sensorCommand("resetInitialPose");
+        command("resetInitialPose");
     }
 
     /**
@@ -336,7 +350,7 @@ public class ARActivity extends ARViewActivity
     {
         // Switch between debug modes
         mCurrentDebugMode = (mCurrentDebugMode + 1) % mDebugModes.length;
-        metaioSDK.sensorCommand("setDebugRenderMode", mDebugModes[mCurrentDebugMode]);
+        command("setDebugRenderMode", mDebugModes[mCurrentDebugMode]);
     }
 
     /* Display the tools associated with the model when in tracking state
@@ -364,19 +378,14 @@ public class ARActivity extends ARViewActivity
         mProcedureSteps.get(mCurrentStep).show();
         // And generic information
         // Take care this might be called from Metaio SDK callback out of the UI thread
-        if ( Looper.myLooper() == Looper.getMainLooper() ) {
-            updateBox(mDescriptionBox, mProcedureSteps.get(mCurrentStep).getDescription().toString());
-            updateBox(mWarningBox, mProcedureSteps.get(mCurrentStep).getWarning().toString());
-        } else {
-            // Take care this might be called from Metaio SDK callback out of the UI thread
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    updateBox(mDescriptionBox, mProcedureSteps.get(mCurrentStep).getDescription().toString());
-                    updateBox(mWarningBox, mProcedureSteps.get(mCurrentStep).getWarning().toString());
-                }
-            });
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                updateBox(mDescriptionBox, mProcedureSteps.get(mCurrentStep).getDescription().toString());
+                updateBox(mWarningBox, mProcedureSteps.get(mCurrentStep).getWarning().toString());
+            }
+        });
+
     }
 
     /* Hide the current procedure step
@@ -385,18 +394,13 @@ public class ARActivity extends ARViewActivity
         // Hide model
         mProcedureSteps.get(mCurrentStep).hide();
         // Take care this might be called from Metaio SDK callback out of the UI thread
-        if ( Looper.myLooper() == Looper.getMainLooper() ) {
-            mDescriptionBox.setVisibility(View.GONE);
-            mWarningBox.setVisibility(View.GONE);
-        } else {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mDescriptionBox.setVisibility(View.GONE);
-                    mWarningBox.setVisibility(View.GONE);
-                }
-            });
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mDescriptionBox.setVisibility(View.GONE);
+                mWarningBox.setVisibility(View.GONE);
+            }
+        });
     }
 
     /* Change the current procedure step
@@ -484,8 +488,8 @@ public class ARActivity extends ARViewActivity
                 metaioSDK.setFreezeTracking(false);
             }
             hideCurrentStep();
-            metaioSDK.sensorCommand("resetInitialPose");
-            metaioSDK.sensorCommand("reset");
+            command("resetInitialPose");
+            command("reset");
             mIsTracking = false;
             metaioSDK.pauseTracking(true);
         } else {
@@ -537,9 +541,23 @@ public class ARActivity extends ARViewActivity
         }
     }
 
+    private void createHeadlight() {
+        metaioSDK.setAmbientLight(new Vector3d(0.0f));
+
+        mHeadLight = metaioSDK.createLight();
+        mHeadLight.setType(ELIGHT_TYPE.ELIGHT_TYPE_DIRECTIONAL);
+        mHeadLight.setAmbientColor(new Vector3d(0, 0, 0));
+        mHeadLight.setDiffuseColor(new Vector3d(1, 1, 1));
+        mHeadLight.setCoordinateSystemID(1);
+        mHeadLight.setDirection(new Vector3d(0, 0, -1)); // Default -Z
+    }
+
 	@Override
 	protected void loadContents() 
 	{
+        // Initialize lighting
+        createHeadlight();
+
         // If you want to occlude the augmented content
         /*
         mOcclusionModel = loadModel("cup_tracking/SurfaceModel.obj");
@@ -576,20 +594,27 @@ public class ARActivity extends ARViewActivity
         mTrackingModel = loadModel("platine_tracking/VIS_TRACK.obj");
 
         // Load the procedure steps
-        IGeometry augmentedModel = loadModel("platine_step_1.zip");
-        IGeometry augmentedToolModel = loadModel("platine_step_1_tools.zip");
+        IGeometry augmentedModel = loadModel("platine_step_1.obj");
+        IGeometry augmentedToolModel = loadModel("platine_step_1_tools.obj");
+        augmentedToolModel.setScale(new Vector3d(3f, 3f, 3f));
+        augmentedToolModel.setTranslation(new Vector3d(-0f, -340f, 100f));
         ProcedureStep step1 = new ProcedureStep(augmentedModel, augmentedToolModel);
         step1.setDescription("Fixation du raidisseur");
         step1.setWarning("Monter le raidisseur du côté non fraisé des Sub-D 9 points");
         mProcedureSteps.add( step1 );
 
-        augmentedModel = loadModel("platine_step_1.zip");
+        augmentedModel = loadModel("platine_step_2.obj");
         ProcedureStep step2 = new ProcedureStep(augmentedModel, augmentedToolModel);
         step2.setDescription("Fixation des deux cornières");
         mProcedureSteps.add( step2 );
 
-		//final File envmapPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "env_map.png");
-		//metaioSDK.loadEnvironmentMap(envmapPath, EENV_MAP_FORMAT.EEMF_LATLONG);
+        augmentedModel = loadModel("platine_step_3.obj");
+        ProcedureStep step3 = new ProcedureStep(augmentedModel, augmentedToolModel);
+        step3.setDescription("Fixation des deux cornières");
+        mProcedureSteps.add( step3 );
+
+		final File envmapPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "env_map.png");
+		metaioSDK.loadEnvironmentMap(envmapPath, EENV_MAP_FORMAT.EEMF_LATLONG);
 
 		if (mTrackingModel != null)
             mTrackingModel.setCoordinateSystemID(1);
