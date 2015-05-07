@@ -490,7 +490,7 @@ public class ARActivity extends ARViewActivity
         step1.setWarning("Monter le raidisseur du côté non fraisé des Sub-D 9 points");
         mProcedureSteps.add( step1 );
 
-        augmentedModel = loadModel("platine_step_1.zip");
+        augmentedModel = loadModel("platine_step_2.zip");
         ProcedureStep step2 = new ProcedureStep(augmentedModel, augmentedToolModel);
         step2.setDescription("Fixation des deux cornières");
         mProcedureSteps.add( step2 );
