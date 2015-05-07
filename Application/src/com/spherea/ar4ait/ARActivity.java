@@ -306,14 +306,23 @@ public class ARActivity extends ARViewActivity
         String xmlFileContent = metaioSDK.sensorCommand("exportConfig");
         try {
             ProcedureStorage procedureStorage = new ProcedureStorage(mProcedure,getApplicationContext());
-            String trackingParametersFilePath = procedureStorage.getTrackingParametersFilePath();
-            File trackingParametersFile = new File(trackingParametersFilePath);
-            if (trackingParametersFile.exists()) {
-                trackingParametersFile.delete();
+            if (procedureStorage.createProcedureDirectory()) {
+                String trackingParametersFilePath = procedureStorage.getTrackingParametersFilePath();
+                File trackingParametersFile = new File(trackingParametersFilePath);
+                if (trackingParametersFile.exists()) {
+                    trackingParametersFile.delete();
+                }
+                FileOutputStream fileOutputStream = new FileOutputStream(trackingParametersFilePath);
+                OutputStreamWriter outputStreamWriter=new OutputStreamWriter(fileOutputStream);
+                outputStreamWriter.write(xmlFileContent);
+                outputStreamWriter.close();
+                fileOutputStream.close();
+                Toast.makeText(getApplicationContext(), "Tracking parameters saved", Toast.LENGTH_SHORT).show();
             }
-            FileOutputStream fileOutputStream = new FileOutputStream(trackingParametersFilePath);
-            fileOutputStream.write(xmlFileContent.getBytes());
-            fileOutputStream.close();
+            else {
+                Toast.makeText(getApplicationContext(), "Cannot create procedure directory", Toast.LENGTH_SHORT).show();
+            }
+
         }
         catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
@@ -560,8 +569,6 @@ public class ARActivity extends ARViewActivity
         augmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
         */
 
-        ProcedureStorage procedureStorage = new ProcedureStorage(mProcedure, getApplicationContext());
-        //TODO: all the lines below should be replaced by : procedureStorage.load();
 
         mOcclusionModel = loadModel("platine_tracking/SurfaceModel.obj");
         //mOcclusionModel = loadModel("platine_tracking/lowpoly_model_3d_v2.obj");
@@ -599,20 +606,18 @@ public class ARActivity extends ARViewActivity
         metaioSDK.setCameraParameters(cameraPath);
 
         // Then tracking settings
-        String trackingParametersFilePath = procedureStorage.getTrackingParametersFilePath();
-        File trackingParametersFile = new File(trackingParametersFilePath);
-        if (trackingParametersFile.exists()) {
-            try {
-                // set tracking configuration
-                if (metaioSDK.setTrackingConfiguration(trackingParametersFilePath, true)) {
-                    mControlPanel.refresh();
-                }
-            } catch (Exception e) {
-                MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: " + trackingParametersFilePath + " " + e.getMessage());
+        File trackingParametersFile = AssetsManager.getAssetPathAsFile(getApplicationContext(),"platine_tracking/Tracking.xml");
+        try {
+            // set tracking configuration
+            if (metaioSDK.setTrackingConfiguration(trackingParametersFile)) {
+                mControlPanel.refresh();
             }
-        }
 
-	}
+
+        } catch (Exception e) {
+            MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: " + trackingParametersFile.getAbsolutePath() + " " + e.getMessage());
+        }
+   	}
 
     /* Manage Metaio SDK callbacks
      */
