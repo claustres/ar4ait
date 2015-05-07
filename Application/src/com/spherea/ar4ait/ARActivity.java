@@ -1,17 +1,23 @@
 package com.spherea.ar4ait;
 
 import java.io.File;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.View;
 import android.view.MotionEvent;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.metaio.sdk.ARViewActivity;
 import com.metaio.sdk.MetaioDebug;
@@ -80,6 +86,9 @@ public class ARActivity extends ARViewActivity
     ImageButton mAidButton = null;
     ImageButton mPreviousButton = null;
     ImageButton mNextButton = null;
+    ImageButton mSettingsButton = null;
+    LinearLayout mSettingsPanel = null;
+    SettingsView mControlPanel = null;
 
     TextView    mDescriptionBox = null;
     TextView    mWarningBox = null;
@@ -104,7 +113,7 @@ public class ARActivity extends ARViewActivity
 	{
 		super.onCreate(savedInstanceState);
 
-        // Get buttons
+        // Get the widgets
         mTrackingButton = (ImageButton)mGUIView.findViewById(R.id.trackingButton);
         mFreezeButton = (ImageButton)mGUIView.findViewById(R.id.freezeButton);
         mResetPoseButton = (ImageButton)mGUIView.findViewById(R.id.resetPoseButton);
@@ -114,7 +123,14 @@ public class ARActivity extends ARViewActivity
         mToolButton = (ImageButton)mGUIView.findViewById(R.id.toolButton);
         mPreviousButton = (ImageButton)mGUIView.findViewById(R.id.previousButton);
         mNextButton = (ImageButton)mGUIView.findViewById(R.id.nextButton);
+        mSettingsButton = (ImageButton)mGUIView.findViewById(R.id.settingsButton);
+        mSettingsPanel = (LinearLayout)mGUIView.findViewById(R.id.settingsView);
+        mSettingsPanel.setVisibility(View.GONE);
 
+        mControlPanel = (SettingsView)getFragmentManager().findFragmentById(R.id.settingsView);
+
+        // Default state
+		mCallbackHandler = new MetaioSDKCallbackHandler();
         mDescriptionBox = (TextView)mGUIView.findViewById(R.id.descriptionBox);
         mWarningBox = (TextView)mGUIView.findViewById(R.id.warningBox);
 
@@ -192,7 +208,26 @@ public class ARActivity extends ARViewActivity
         }
     }
 
-    /* Close the app
+    /**
+     *  Control the CAD Model tracking
+     */
+    public String command(String command)
+    {
+        MetaioDebug.log("SensorCommand:" + command);
+        return metaioSDK.sensorCommand(command);
+    }
+
+    /**
+     *  Control the CAD Model tracking
+     */
+    public String command(String command, String parameters)
+    {
+        MetaioDebug.log("SensorCommand:" + command + " " + parameters);
+        return metaioSDK.sensorCommand(command, parameters);
+    }
+
+    /**
+     *  Close the app
      */
     public void onCloseButtonClick(View v)
 	{
@@ -222,14 +257,16 @@ public class ARActivity extends ARViewActivity
         metaioSDK.sensorCommand("reset");
     }
 
-    /* Reset pose to default state
+    /**
+     * Reset pose to default state
 	 */
     public void onResetPoseButtonClick(View v)
     {
         metaioSDK.sensorCommand("resetInitialPose");
     }
 
-    /* Display the default pose or not
+    /**
+     *  Display the default pose or not
 	 */
     public void onAidButtonClick(View v)
     {
@@ -238,7 +275,33 @@ public class ARActivity extends ARViewActivity
         }
     }
 
-    /* Display the line model as currently tracked or not
+    /**
+     *  Display the control panel
+     */
+    public void onSettingsButtonClick(View v)
+    {
+        mSettingsPanel.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Close the settings panel
+     */
+    public void onCloseSettingsButtonClick(View v)
+    {
+        mSettingsPanel.setVisibility(View.GONE);
+        mSettingsButton.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Close the settings panel
+     */
+    public void onSaveSettingsButtonClick(View v)
+    {
+        saveTrackingConfiguration("mouse_tracking/Tracking.xml");
+    }
+
+    /**
+     *  Display the line model as currently tracked or not
 	 */
     public void onDebugButtonClick(View v)
     {
@@ -511,10 +574,11 @@ public class ARActivity extends ARViewActivity
         // Load camera calibration
         final File cameraPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), "camera.xml");
         metaioSDK.setCameraParameters(cameraPath);
+
         // Then tracking settings
-		//setTrackingConfiguration("cup_tracking/Tracking.xml");
-        //setTrackingConfiguration("mouse_tracking/Tracking.xml");
-        setTrackingConfiguration("platine_tracking/Tracking.xml");
+        loadTrackingConfiguration("platine_tracking/Tracking.xml");
+
+        mControlPanel.refresh();
 	}
 
     /* Manage Metaio SDK callbacks
@@ -600,25 +664,53 @@ public class ARActivity extends ARViewActivity
         return ( parent != null ) && parent.equals(model);
     }
 
-    /* Load a given tracking configuration
+    /**
+     * Gets the path to the given configuration file
      */
-    private boolean setTrackingConfiguration(final String path)
+    private File getTrackingConfigurationFile(final String filePath)
+    {
+        return  AssetsManager.getAssetPathAsFile(getApplicationContext(), filePath);
+    }
+
+    /**
+     * Load a given tracking configuration
+     */
+    private boolean loadTrackingConfiguration(final String filePath)
 	{
 		boolean result = false;
 		try
 		{
 			// set tracking configuration
-			final File xmlPath = AssetsManager.getAssetPathAsFile(getApplicationContext(), path);			
-			result = metaioSDK.setTrackingConfiguration(xmlPath);
-			MetaioDebug.log("Loaded tracking configuration "+xmlPath);			
+			result = metaioSDK.setTrackingConfiguration(getTrackingConfigurationFile(filePath));
+			MetaioDebug.log("Loaded tracking configuration "+ filePath);
 		}       
 		catch (Exception e)
 		{
-			MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: "+ path + " " +e.getMessage());
-			return result;
+			MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: "+ filePath + " " +e.getMessage());
 		}		
 		return result;
 	}
+
+    /**
+     * Load a given tracking configuration
+     */
+    private boolean saveTrackingConfiguration(final String filePath)
+    {
+        boolean result = false;
+        String xmlFileContent = metaioSDK.sensorCommand("exportConfig");
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(getTrackingConfigurationFile(filePath).getAbsolutePath());
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            outputStreamWriter.write(xmlFileContent);
+            outputStreamWriter.close();
+            Toast.makeText(getApplicationContext(), "Tracking Parameters Saved", Toast.LENGTH_SHORT);
+            result = true;
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+        return result;
+    }
 
 	@Override
 	protected int getGUILayout()
