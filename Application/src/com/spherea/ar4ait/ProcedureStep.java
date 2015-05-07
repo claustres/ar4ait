@@ -103,15 +103,13 @@ public class ProcedureStep
 
     /* Check if the tools associated with the step is visible
 	 */
-    public Boolean isToolVisible()
-    {
+    public Boolean isToolVisible() {
         return ( ( mAugmentedToolModel != null ) && mAugmentedToolModel.isVisible() );
     }
 
     /* Display the tools associated with the step
 	 */
-    public void setToolVisible(Boolean visible)
-    {
+    public void setToolVisible(Boolean visible) {
         if ( mAugmentedToolModel != null ) {
             mAugmentedToolModel.setVisible( visible );
         }

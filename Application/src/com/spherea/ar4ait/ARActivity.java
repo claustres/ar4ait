@@ -68,6 +68,12 @@ public class ARActivity extends ARViewActivity
     private String[] mDebugModes = {"off", "model", "normals", "normals_and_matches", "points"};
     private int mCurrentDebugMode = 0;
 
+
+    /**
+     * The procedure to be executed
+     */
+    Procedure mProcedure = new Procedure("Platine");
+
     /**
      * The different procedure steps
      */
@@ -297,7 +303,21 @@ public class ARActivity extends ARViewActivity
      */
     public void onSaveSettingsButtonClick(View v)
     {
-        saveTrackingConfiguration("mouse_tracking/Tracking.xml");
+        String xmlFileContent = metaioSDK.sensorCommand("exportConfig");
+        try {
+            ProcedureStorage procedureStorage = new ProcedureStorage(mProcedure,getApplicationContext());
+            String trackingParametersFilePath = procedureStorage.getTrackingParametersFilePath();
+            File trackingParametersFile = new File(trackingParametersFilePath);
+            if (trackingParametersFile.exists()) {
+                trackingParametersFile.delete();
+            }
+            FileOutputStream fileOutputStream = new FileOutputStream(trackingParametersFilePath);
+            fileOutputStream.write(xmlFileContent.getBytes());
+            fileOutputStream.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     /**
@@ -540,6 +560,9 @@ public class ARActivity extends ARViewActivity
         augmentedToolModel.setRotation(new Rotation(0f, -(float)Math.PI / 2f, 0f));
         */
 
+        ProcedureStorage procedureStorage = new ProcedureStorage(mProcedure, getApplicationContext());
+        //TODO: all the lines below should be replaced by : procedureStorage.load();
+
         mOcclusionModel = loadModel("platine_tracking/SurfaceModel.obj");
         //mOcclusionModel = loadModel("platine_tracking/lowpoly_model_3d_v2.obj");
         mAidModel = loadModel("platine_tracking/VIS_INIT.obj");
@@ -576,9 +599,19 @@ public class ARActivity extends ARViewActivity
         metaioSDK.setCameraParameters(cameraPath);
 
         // Then tracking settings
-        loadTrackingConfiguration("platine_tracking/Tracking.xml");
+        String trackingParametersFilePath = procedureStorage.getTrackingParametersFilePath();
+        File trackingParametersFile = new File(trackingParametersFilePath);
+        if (trackingParametersFile.exists()) {
+            try {
+                // set tracking configuration
+                if (metaioSDK.setTrackingConfiguration(trackingParametersFilePath, true)) {
+                    mControlPanel.refresh();
+                }
+            } catch (Exception e) {
+                MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: " + trackingParametersFilePath + " " + e.getMessage());
+            }
+        }
 
-        mControlPanel.refresh();
 	}
 
     /* Manage Metaio SDK callbacks
@@ -662,54 +695,6 @@ public class ARActivity extends ARViewActivity
         }
 
         return ( parent != null ) && parent.equals(model);
-    }
-
-    /**
-     * Gets the path to the given configuration file
-     */
-    private File getTrackingConfigurationFile(final String filePath)
-    {
-        return  AssetsManager.getAssetPathAsFile(getApplicationContext(), filePath);
-    }
-
-    /**
-     * Load a given tracking configuration
-     */
-    private boolean loadTrackingConfiguration(final String filePath)
-	{
-		boolean result = false;
-		try
-		{
-			// set tracking configuration
-			result = metaioSDK.setTrackingConfiguration(getTrackingConfigurationFile(filePath));
-			MetaioDebug.log("Loaded tracking configuration "+ filePath);
-		}       
-		catch (Exception e)
-		{
-			MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: "+ filePath + " " +e.getMessage());
-		}		
-		return result;
-	}
-
-    /**
-     * Load a given tracking configuration
-     */
-    private boolean saveTrackingConfiguration(final String filePath)
-    {
-        boolean result = false;
-        String xmlFileContent = metaioSDK.sensorCommand("exportConfig");
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(getTrackingConfigurationFile(filePath).getAbsolutePath());
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            outputStreamWriter.write(xmlFileContent);
-            outputStreamWriter.close();
-            Toast.makeText(getApplicationContext(), "Tracking Parameters Saved", Toast.LENGTH_SHORT);
-            result = true;
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-        return result;
     }
 
 	@Override
