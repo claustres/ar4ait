@@ -103,6 +103,7 @@ public class ARActivity extends ARViewActivity
     LinearLayout mSettingsPanel = null;
     SettingsView mControlPanel = null;
 
+    TextView    mQualityBox = null;
     TextView    mDescriptionBox = null;
     TextView    mWarningBox = null;
 
@@ -140,6 +141,7 @@ public class ARActivity extends ARViewActivity
         mSettingsPanel = (LinearLayout)mGUIView.findViewById(R.id.settingsView);
         mSettingsPanel.setVisibility(View.GONE);
 
+        mQualityBox = (TextView)mGUIView.findViewById(R.id.qualityBox);
         mDescriptionBox = (TextView)mGUIView.findViewById(R.id.descriptionBox);
         mWarningBox = (TextView)mGUIView.findViewById(R.id.warningBox);
 
@@ -212,13 +214,13 @@ public class ARActivity extends ARViewActivity
 
         try
         {
+            final TrackingValues trackingValues = metaioSDK.getTrackingValues(1, false);
+
             // Not used yet
             //checkDistanceToTarget();
 
             // Update headlight
             if ( mHeadLight != null ) {
-                TrackingValues trackingValues = metaioSDK.getTrackingValues(1, false);
-
                 // 3D point on the coordinate system
                 Vector3d point = new Vector3d(0.0f, 0.0f, 0.0f);
                 // camera position w.r.t. to the 3D point
@@ -229,6 +231,17 @@ public class ARActivity extends ARViewActivity
                 Vector3d direction = cameraPosition.multiply(-1.0f);
                 direction.normalize();
                 mHeadLight.setDirection(direction);
+            }
+
+            if ( mIsTracking ) {
+                // Take care this might be called from Metaio SDK callback out of the UI thread
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // BUG : update quality, not really relevent
+                        //mQualityBox.setText(String.format("%.0f%%",100 * trackingValues.getQuality()));
+                    }
+                });
             }
         }
         catch (Exception e)
@@ -266,7 +279,7 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onTrackingButtonClick(View v)
     {
-        setTrackingEnabled( mIsTrackingPaused );
+        setTrackingEnabled(mIsTrackingPaused);
     }
 
     /* Freeze/Resume tracking
@@ -437,7 +450,7 @@ public class ARActivity extends ARViewActivity
 	 */
     public void onNextButtonClick(View v)
     {
-        setCurrentStep( (mCurrentStep + 1) % mProcedureSteps.size() );
+        setCurrentStep((mCurrentStep + 1) % mProcedureSteps.size());
     }
 
     /* This method setups the activity GUI according to tracking state
@@ -466,6 +479,7 @@ public class ARActivity extends ARViewActivity
                 mToolButton.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
                 mPreviousButton.setVisibility(!mIsTracking || (mCurrentStep == 0) ? View.GONE : View.VISIBLE);
                 mNextButton.setVisibility(!mIsTracking || (mCurrentStep == mProcedureSteps.size() - 1) ? View.GONE : View.VISIBLE);
+                mQualityBox.setVisibility(!mIsTracking ? View.GONE : View.VISIBLE);
             }
         });
     }
