@@ -595,7 +595,7 @@ public class ARActivity extends ARViewActivity
 
         IGeometry ecrouM4 = loadModel("platine_steps/Ecrou_M4.obj");
         if (ecrouM4 != null) {
-            ecrouM4.setTranslation(new Vector3d(-0f, -340f, 0f));
+            ecrouM4.setTranslation(new Vector3d(-0f, -340f, 100f));
             ecrouM4.setScale(new Vector3d(5f, 5f, 5f));
             ecrouM4.setName("Ecrou M4");
             step1.addAugmentedToolModel(ecrouM4);
@@ -603,7 +603,7 @@ public class ARActivity extends ARViewActivity
 
         IGeometry rondelleBSM4 = loadModel("platine_steps/Rondelle_BS_M4.obj");
         if (rondelleBSM4 != null) {
-            rondelleBSM4.setTranslation(new Vector3d(-0f, -340f, 0f));
+            rondelleBSM4.setTranslation(new Vector3d(-0f, -340f, 100f));
             rondelleBSM4.setScale(new Vector3d(5f, 5f, 5f));
             rondelleBSM4.setName("Rondelle BS M4");
             step1.addAugmentedToolModel(rondelleBSM4);
@@ -611,7 +611,7 @@ public class ARActivity extends ARViewActivity
 
         IGeometry rondelleZ4 = loadModel("platine_steps/Rondelle_Z4.obj");
         if (rondelleZ4 != null) {
-            rondelleZ4.setTranslation(new Vector3d(-0f, -340f, 0f));
+            rondelleZ4.setTranslation(new Vector3d(-0f, -340f, 100f));
             rondelleZ4.setScale(new Vector3d(5f, 5f, 5f));
             rondelleZ4.setName("Rondelle Z4");
             step1.addAugmentedToolModel(rondelleZ4);
@@ -619,7 +619,7 @@ public class ARActivity extends ARViewActivity
 
         IGeometry visCHCM416 = loadModel("platine_steps/VIS_CHC_M4x16.obj");
         if (visCHCM416 != null) {
-            visCHCM416.setTranslation(new Vector3d(-0f, -340f, 0f));
+            visCHCM416.setTranslation(new Vector3d(-0f, -340f, 100f));
             visCHCM416.setScale(new Vector3d(4f, 4f, 4f));
             visCHCM416.setName("VIS CHC M4x16");
             step1.addAugmentedToolModel(visCHCM416);
@@ -662,7 +662,6 @@ public class ARActivity extends ARViewActivity
             if (metaioSDK.setTrackingConfiguration(trackingParametersFile)) {
                 mControlPanel.refresh();
             }
-
 
         } catch (Exception e) {
             MetaioDebug.log(Log.ERROR, "Error loading tracking configuration: " + trackingParametersFile.getAbsolutePath() + " " + e.getMessage());
